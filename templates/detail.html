@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous" />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+    crossorigin="anonymous"></script>
+
+  <link rel="stylesheet" type="text/css" href="/static/styles/styleDetail.css">
+
+  <title>야먹자! - 상세 페이지</title>
+
+  <script>
+    $(document).ready(function () {
+      show_restaurant();
+      show_reply();
+      // !더미데이터에서만 동작: 동적으로 추가되는 수정 버튼 클릭
+      $('#reply-list').on('click', '.edit-button-static', editClick);
+      // !더미데이터에서만 동작: 동적으로 추가되는 완료 버튼 클릭
+       $('#reply-list').on('click', '.done-button-static', doneClick);
+      // 페이지 버튼 클릭시 active상태 변경
+      $('.pagination').on('click', 'li', movePage);
+    });
+
+    //!더미데이터에서만 필요한 함수:
+    function editClick() {
+      console.log("edit");
+      // 클릭한 버튼의 id 가져오기
+      let buttonId = $(this).attr('id');
+      //인덱스 값 가져오기
+      let idx = $(this).attr('id').split('-')[2];
+      ////
+
+
+      //댓글 내용 부분의 클래스를 수정 가능하도록 변경
+      $('#editreply-' + idx).addClass('form-control');
+      $('#editreply-' + idx).removeClass('form-control-plaintext');
+      $('#editreply-' + idx).prop('disabled', false);
+
+      // 수정 버튼 숨기고 완료 버튼 표시
+      $('#' + buttonId).hide();
+      $('#' + buttonId.replace('edit', 'done')).show();
+    }
+
+    // !더미데이터에서만 필요한 함수:
+    // 완료 클릭 후 페이지 리로딩 할거면 아예 추가 안 하셔도 되는 부분입니다.
+    function doneClick() {
+      // 클릭한 버튼의 id 가져오기
+      let buttonId = $(this).attr('id');
+
+      //인덱스 값 가져오기
+      let idx = $(this).attr('id').split('-')[2];
+
+      //댓글 내용 부분의 클래스를 수정 불가능하도록 변경
+      $('#editreply-' + idx).addClass('form-control-plaintext');
+      $('#editreply-' + idx).removeClass('form-control');
+      $('#editreply-' + idx).prop('disabled', true);
+
+      // 완료 버튼 숨기고 수정 버튼 표시
+      $('#' + buttonId).hide();
+      $('#' + buttonId.replace('done', 'edit')).show();
+    }
+
+    //버튼 전환 함수
+    function movePage() {
+      {
+        // 모든 페이지 버튼의 active 클래스 제거
+        $('.pagination li').removeClass('active');
+        // 클릭한 페이지 버튼에 active 클래스 추가
+        $(this).addClass('active');
+      }
+    }
+
+
+    function show_restaurant() {
+      fetch('/desc')
+        .then(res => res.json())
+        .then(data => {
+          console.log(data); // 데이터를 제대로 가져왔는지 확인
+          let result = data['result'];
+          let name = result['name'];
+          let address = result['address'];
+          let picture = result['picture'];
+          let star = result['star'];
+          let review = result['review'];
+          console.log(result);
+          let star_repeat = '⭐'.repeat(star)
+          $('#mainContent').empty();
+          let temp_html = `
+                <img src="data:image/*;base64, ${picture}"
+                      class="card-img-top">
+                  <div class="card-body">
+                      <h5 class="card-title" id="name">${name}</h5>                     
+                  </div>
+                  <table class="table">
+                      <thead>
+                          <tr>
+                              <th scope="col" style="width: 100px;"></th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <tr>
+                              <th scope="row">주소</th>
+                              <td><a href="https://map.naver.com/v5/search/${address}" target="_blank">${address}</a></td>
+                          </tr>
+                          <tr>
+                              <th scope="row">별점</th>
+                              <td>${star_repeat}</</td>
+                          </tr>
+                          <tr>
+                              <th scope="row">리뷰</th>
+                              <td>${review} </td>
+                          </tr>
+
+                      </tbody>
+                  </table>
+      `;
+          $('#mainContent').append(temp_html); // #mainContent에 HTML 추가
+        })
+        .catch(error => console.log(error)); // fetch() Promise가 거부되었는지 확인
+    }
+
+    function save_reply() {
+      let name = $('#name').text(); //식당이름
+      let reply = $('#reply').val();//작성댓글
+      let nickname = $('#nickname').val(); // 아이디 입력란의 값을 가져옴
+      let password = $('#password').val(); // 비밀번호 입력란의 값을 가져옴
+
+      let formData = new FormData();
+      formData.append("name_give", name);
+      formData.append("reply_give", reply);
+      formData.append("nickname_give", nickname);
+      formData.append("password_give", password);
+
+      fetch('/save_reply', { method: "POST", body: formData, }).then((response) => response.json()).then((data) => {
+        console.log(data)
+        alert(data["msg"]); // app.py(서버)로부터 댓글정보를 반환(return)받아 돌아오는 데이터
+        window.location.reload();
+      });
+    }
+
+    function show_reply() {
+      fetch('/desc_reply').then((res) => res.json()).then((data) => {
+        let rows = data['result']
+
+        $('#reply-list').empty()
+        let replyIdx = 1;
+        rows.forEach(a => {
+          let nickname = a['nickname']
+          let reply = a['reply']
+          let temp_html = `
+                      <ul class="list-group list-group-flush">
+                        <div class="row">
+                          <div class="col">
+                            <label for="list-group-item" class="commentId" id="editnickname-${replyIdx}">${nickname}</label>
+                          </div>
+                          <div class="col-2" style="margin-right: 30px;">
+                            <input type="text" class="form-control" id="editPw-${replyIdx}" value="" placeholder="PW">
+                          </div>
+                        </div>
+                        <li class="list-group-item">
+                            <div class="row">
+                              <div class="col-10">
+                                  <input type="text" class="form-control-plaintext" id="editreply-${replyIdx}" disabled value="${reply}">
+                                </div>
+                                <div class="col-2">
+                                  <button class="edit-button" onclick="editbutton_clicked(this)" id="edit-btn-${replyIdx}" value="${replyIdx}">수정</button>
+                                  <button class="done-button" onclick="donebutton_clicked(this)" id="done-btn-${replyIdx}" value="${replyIdx}" style="display:none;">완료</button>
+                                  <button class="delete-button" onclick="deletebutton_clicked(this)" id="delete-button-${replyIdx}" value="${replyIdx}">삭제</button>
+                                </div>
+                            </div>
+                        </li>
+                   </ul>`
+          $('#reply-list').append(temp_html)
+          replyIdx++;
+        });
+      })
+    }
+    function button_clicked() {
+      window.location.href = "/";
+      //window.location.href = "detail";
+    }
+
+    function editbutton_clicked(button) {
+      // 클릭한 버튼의 id 가져오기
+      let editname = $('#name').text(); //가게이름      
+      let editnickname = $('#editnickname-' + button.value).text(); //button.value : 댓글의 번호(1, 2, 3,...)
+      let editreply = $('#editreply-' + button.value).attr('value').trim(); //댓글내용 trim()-양쪽 여백 제거
+      let editPw = $('#editPw-' + button.value).val();  //댓글 비밀번호
+
+      let formData = new FormData();
+      formData.append("targetname_give", editname);
+      formData.append("targetnickname_give", editnickname);
+      formData.append("targetreply_give", editreply);
+      formData.append("targetpassword_give", editPw);
+
+      fetch('/update_reply', { method: "POST", body: formData, }).then((response) => response.json()).then((data) => {
+        // 해당 버튼에 대한 처리
+        if (data["result"] == "success") {
+          var buttonId = $(this).attr('id');
+          $('#edit-btn-' + button.value).hide();
+          $('#done-btn-' + button.value).show();
+
+          $('#editreply-' + button.value).addClass('form-control');
+          $('#editreply-' + button.value).removeClass('form-control-plaintext');
+          $('#editreply-' + button.value).prop('disabled', false);
+          alert(data["msg"]);
+        }
+        else if (data["result"] == "fail") {
+        }
+      });
+    }
+
+    function donebutton_clicked(button) {
+      let editname = $('#name').text(); //가게이름      
+      let editnickname = $('#editnickname-' + button.value).text(); //button.value : 댓글의 번호(1, 2, 3,...)
+      let editreply = $('#editreply-' + button.value).val().trim(); //댓글내용 trim()-양쪽 여백 제거
+      let editPw = $('#editPw-' + button.value).val();  //댓글 비밀번호
+      console.log("완료버튼 클릭 시 전달되는 정보: ", editname, editnickname, editreply, editPw)
+      let formData = new FormData();
+      formData.append("afterreply_give", editreply);
+      fetch('/done_reply', { method: "POST", body: formData, }).then((response) => response.json()).then((data) => {
+        alert(data["msg"]);
+        window.location.reload();
+      });
+    }
+
+    function deletebutton_clicked(button) {
+      // 클릭한 버튼의 id 가져오기
+      let editname = $('#name').text(); //가게이름      
+      let editnickname = $('#editnickname-' + button.value).text(); //button.value : 댓글의 번호(1, 2, 3,...)
+      let editreply = $('#editreply-' + button.value).attr('value').trim(); //댓글내용 trim()-양쪽 여백 제거
+      let editPw = $('#editPw-' + button.value).val();  //댓글 비밀번호
+      let formData = new FormData();
+      formData.append("targetname_give", editname);
+      formData.append("targetnickname_give", editnickname);
+      formData.append("targetreply_give", editreply);
+      formData.append("targetpassword_give", editPw);
+      console.log("삭제버튼 클릭 시 전달되는 정보: ", editname, editnickname, editreply, editPw)
+      fetch('/delete_reply', { method: "POST", body: formData, }).then((response) => response.json()).then((data) => {
+        console.log(data)
+        // 해당 버튼에 대한 처리
+        if (data["result"] == "success") {
+          alert(data["msg"]);
+          window.location.reload();
+        }
+        else if (data["result"] == "fail") {
+          alert(data["msg"]);
+        }
+      });
+    }
+
+
+
+  </script>
+
+</head>
+
+<body>
+  <div class="container-fluid" id="pageTitle">
+    <div class="row">
+      <div class="col">
+        <h1>
+          야먹자 상세페이지(임시)
+        </h1>
+      </div>
+      <div class="col-2">
+        <button id="homeButton" onclick="button_clicked()">홈</a></button>
+        <a href="/" class="link" style="float: right;">홈으로</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="mainContent">
+    <img src="https://recipe1.ezmember.co.kr/cache/recipe/2019/01/12/b9343d314206275c1b6d0d0c4fcc2ce71.jpg"
+      class="card-img-top">
+    <div class="card-body">
+      <h5 class="card-title" id="address">로마경양식</h5>
+    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col" style="width: 100px;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">주소</th>
+          <td><a href="https://map.naver.com/v5/search/경기 수원시 팔달구 경수대로 549 동수원빌딩 1층 로마경양식" target="_blank">경기 수원시 팔달구
+              경수대로 549 동수원빌딩 1층 로마경양식</a></td>
+        </tr>
+        <tr>
+          <th scope="row">음식점 소개</th>
+          <td>수원 인계동에 위치한 34년 전통경양식을 이어가는 옛날돈까스 , 함박스텍 전문점 입니다.
+            사골국물에 36가지 갖은 양념을 첨가한 데미그라스 소스로 옛날돈까스맛을 유지하고 있습니다.</td>
+        </tr>
+        <tr>
+          <th scope="row">별점</th>
+          <td>⭐⭐⭐⭐⭐</td>
+        </tr>
+        <tr>
+          <th scope="row">리뷰</th>
+          <td>로마경양식 돈까스 식사 후 다른 돈까스 집에서 못 먹을정도로 계속 생각나서 또 들렀어요! 단골이라고 외칠 정도로 요즘 자주 방문하고 있습니다. 저번엔 생선까스에서 가시가 나왔는데 100%
+            수제로 하셔서 넘어갔는데, 사장님께서 어떻게 아셨는지 죄송하다면서 서비스 음료를 주셨어요. 이번 방문에도 사장님이 생선까스 가시 나온 이후로 그 날 생선에서 유독 가시가 많이 나왔다고 인정하셨고
+            더 꼼꼼하게 재료 살펴보고 수제로 돈까스 튀겼다고 합니다. 실수를 인정하고 피드백 받아 더 맛있게 하셨어서 그런가 저번 달 말쯤에 대한민국 명인상을 받으셨더라구요. 축하드립니다~♡ 여전히 돈까스
+            맛있구 조만간 또 방문할게요~~</td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-2">
+        <input class="form-control" id="nickname" placeholder="ID">
+      </div>
+      <div class="col-2">
+        <input class="form-control" type="password" id="password" placeholder="PW">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-10">
+        <div class="mb-3">
+          <textarea class="form-control" id="reply"></textarea>
+        </div>
+      </div>
+      <div class="col-2">
+        <button onclick="save_reply()" type="button" id="writeButton">등록</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="container-fluid">
+    <div class="card-header">
+      댓글창
+    </div>
+    <div class="card" id="reply-list">
+
+      <ul class="list-group list-group-flush">
+        <div class="row">
+          <div class="col">
+            <label for="list-group-item" class="commentId" id="editnickname-1">ehsrktm123</label>
+          </div>
+          <div class="col-2" style="margin-right: 30px;">
+            <input type="text" class="form-control" id="editPw-1" value="" placeholder="PW">
+          </div>
+        </div>
+        <li class="list-group-item">
+          <div class="row">
+            <div class="col-10">
+              <input type="text" class="form-control-plaintext" id="editreply-1" disabled value="튀김옷이 바삭하고 소스가 맛있어요.">
+            </div>
+            <div class="col-2">
+              <!-- 내용변경 -->
+              <div class="button-group">
+                <button id="edit-button-1" class="edit-button-static">수정</button>
+                <button id="done-button-1" style="display: none;" class="done-button-static">완료</button>
+                <button id="delete-button-1" class="delete-button-static">삭제</button>
+              </div>
+
+            </div>
+          </div>
+        </li>
+      </ul>
+
+      <ul class="list-group list-group-flush">
+        <div class="row">
+          <div class="col">
+            <label for="list-group-item" class="commentId" id="editnickname-2">맛집전문가</label>
+          </div>
+          <div class="col-2" style="margin-right: 30px;">
+            <input type="text" class="form-control" id="editPw-2" value="" placeholder="PW">
+          </div>
+        </div>
+        <li class="list-group-item">
+          <div class="row">
+            <div class="col-10">
+              <input type="text" class="form-control-plaintext" id="editreply-2" disabled value="우동도 맛있어요 굿 :>">
+            </div>
+            <div class="col-2">
+              <!-- 내용변경 -->
+              <div class="button-group">
+                <button id="edit-button-2" class="edit-button-static">수정</button>
+                <button id="done-button-2" style="display: none;" class="done-button-static">완료</button>
+                <button id="delete-button-2" class="delete-button-static">삭제</button>
+              </div>
+
+            </div>
+          </div>
+        </li>
+      </ul>
+
+    </div>
+
+    <div>
+      <!-- 페이지 버튼 -->
+      <ul class="pagination" id="pageButton">
+        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+        <li class="page-item"><a class="page-link" href="#">2</a></li>
+        <li class="page-item"><a class="page-link" href="#">3</a></li>
+        <li class="page-item"><a class="page-link" href="#">4</a></li>
+        <li class="page-item"><a class="page-link" href="#">5</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <p></p>
+      <a href="#" class="link">맨위로</a>
+    </div>
+  </div>
+
+
+</body>
+
+</html>

@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+
+    <title>야먹자</title>
+    <!-- CSS -->
+    <link rel="stylesheet" type="text/css" href="/static/styles/style.css">
+
+    <!-- Flask 코드 -->
+    <script>
+        $(document).ready(function () {
+            show_place();
+        });
+
+
+        function save_info() {
+            let name = $('#RestuarantName').val();
+            let address = $('#addrName').val();
+            let input = document.querySelector('#FileName');
+            let star = $('#star').val();
+            let review = $('#comment').val();
+            let nickName = $('#nickname').val(); //닉네임
+            let password = $('#password').val();
+            console.log(nickName)
+            
+            let formData = new FormData();
+            formData.append("placeName_give", name);
+            formData.append("address_give", address);
+            formData.append("picture_give", input.files[0]);
+            formData.append("star_give", star);
+            formData.append("review_give", review);
+            formData.append("nickname_give",nickName); // 닉네임
+            formData.append("password_give",password);
+
+            fetch("/restaurant", { method: "POST", body: formData })
+                .then((res) => res.json())
+                .then((data) => {
+                    //console.log(data)
+                    alert(data["msg"]);
+                    window.location.reload();
+                });
+        }
+
+        // 수정 대상 요소를 찾아서 업데이트합니다.
+        function loadDataToModal(nickName,placeName, address, star, review, password) {
+          const modal = $('#staticBackdrop2');
+          const nickNameInput = modal.find('#nickname');
+          const restuarantNameInput = modal.find('#RestuarantName');
+          const addrNameInput = modal.find('#addrName');
+          const starInput = modal.find('#star');
+          const commentInput = modal.find('#comment');
+          const passwordInput = modal.find('#password1');
+          
+          nickNameInput.val(nickName);
+          restuarantNameInput.val(placeName);
+          addrNameInput.val(address);
+          starInput.val(star);
+          commentInput.val(review);
+          passwordInput.val(password);
+        }
+
+        function update_restaurant() {
+          // 수정할 데이터 가져오기
+          let nickName = $('#nickname').val();
+          let restuarantName = $('#RestuarantName').val();
+          let address = $('#addrName').val();
+          let star = $('#star').val();
+          let review = $('#comment').val();
+          let password = $('#password').val();
+
+          let formData = new FormData();
+          forData.append("edited_nickname_give",nickName);
+          forData.append("edited_restuarantName_give",restuarantName);
+          forData.append("edited_address_give",address);
+          forData.append("edited_star_give",star);
+          forData.append("edited_review_give",review);
+          forData.append("target_password_give",password);
+          forData.append("restuarantNum_give", restuarantNum);
+
+          fetch('/update_restaurant', {method: "POST", body: formData}).then((res) => res.json()).then((data) => {
+            if(dats["result"] == "success") {
+              alert(data["msg"]);
+              window.location.reload();
+            }
+            else if (data["result" == fail]) {
+              alert(data["msg"]);
+            }
+          });
+        }
+        
+        function show_place() {
+            fetch("/restaurant")
+                .then((res) => res.json())
+                .then((data) => {
+                    let rows = data["result"];
+                    //console.log(rows)
+                    $('#cards-box').empty();
+
+                    rows.forEach((a) => {
+                        let placeName = a["name"];
+                        let address = a["address"];
+                        let picture = a["picture"];
+                        let star = a["star"];
+                        let review = a["review"];
+                        let nickName = a["nickname"];
+                        let passWord = a["password"];
+             
+                        let star_repeat = '⭐'.repeat(star)
+
+                        let temp_html = ` <div class="col">
+                                            <div class="card h-100">
+                                                <img src="data:image/*;base64, ${picture}"
+                                                    class="card-img-top">
+                                                <div class="card-body">
+                                                    <h5 class="card-title">${placeName}</h5>
+                                                    <p class="card-text">${address}</p>
+                                                    <p>${star_repeat}</p>
+                                                    <p class='nickName-text'> ${nickName}</p>
+                                                    <a onclick="button_clicked('${placeName}')" class="btn btn-outline-primary" data-bs-toggle="modal" 
+                                                    data-bs-target="#modal1">자세히 보기</a>
+                                                    <button id="btn-update" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#staticBackdrop2" onclick="loadDataToModal('${nickName}' ,'${placeName}', '${address}', '${star}', '${review}', '${passWord}')">수정</button>
+                                                    <div class="modal fade" id="staticBackdrop2" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                                                        <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                            <h1 class="modal-title fs-5" id="staticBackdropLabel">수정 화면</h1>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <div class="mypost">
+                                                                    <div class="container text-center">
+                                                            <div class="row">
+                                                                <div class="col">
+                                                                    <div class="form-floating mb-3">
+                                                                        <input type="text" class="form-control" id="nickname"
+                                                                            placeholder="url" />
+                                                                        <label for="floatingInput" id="Nicknm">닉네임</label>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col">
+                                                                    <div class="form-floating mb-3">
+                                                                        <input type="password" class="form-control" id="password1"
+                                                                            placeholder="url" readonly/>
+                                                                        <label for="floatingInput" id="passwd">패스워드</label>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col">
+                                                                    <div class="form-floating mb-3">
+                                                                        <input type="password" class="form-control" id="password2"
+                                                                            placeholder="url" />
+                                                                        <label for="floatingInput" id="passwd" style="font-size: 13px;">패스워드 확인창</label>
+                                                                    </div>
+                                                                </div>
+                                                                </div>
+                                                            </div>
+                                                                    <!-- 식당이름입력 input -->
+                                                                    <div class="form-floating mb-3">
+                                                                        <input type="text" class="form-control" id="RestuarantName" placeholder="url" />
+                                                                        <label for="floatingInput" id="placeName">이름</label>
+                                                                    </div>
+                                    
+                                                                    <!-- 식당주소입력 input -->
+                                                                    <div class="form-floating mb-3">
+                                                                        <input type="text" class="form-control" id="addrName" placeholder="url" />
+                                                                        <label for="floatingInput" id="addRess">주소</label>
+                                                                    </div>
+                                    
+                                                                    <!-- 별점 선택 -->
+                                                                    <div class="input-group mb-3">
+                                                                        <label class="input-group-text" for="inputGroupSelect01">별점</label>
+                                                                        <select class="form-select" id="star">
+                                                                            <option selected>-- 선택하기 --</option>
+                                                                            <option value="1">⭐</option>
+                                                                            <option value="2">⭐⭐</option>
+                                                                            <option value="3">⭐⭐⭐</option>
+                                                                            <option value="4">⭐⭐⭐⭐</option>
+                                                                            <option value="5">⭐⭐⭐⭐⭐</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <!-- 리뷰 입력 -->
+                                                                    <div class="form-floating">
+                                                                        <textarea class="form-control" placeholder="Leave a comment here" id="comment"
+                                                                            style="height: 200px"></textarea>
+                                                                        <label for="floatingTextarea2" id="textual">리 뷰</label>
+                                                                    </div>
+                                                                    <br>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                                                            <button onclick="password_check(),update_restaurant()" type="button" class="btn btn-warning">수정하기</button>
+                                                            </div>
+                                                        </div>
+                                                        </div>
+                                                    </div>
+                                                    <button id="btn_delete" class="btn btn-danger">삭제</button>
+                                                </div>
+                                            </div>
+                  `;
+                        $('#cards-box').append(temp_html);
+                    });
+                });
+        }
+
+        function button_clicked(placeName) {
+            window.location.href = "/detail?placeName=" + encodeURIComponent(placeName);
+            //window.location.href = "detail";
+
+        }
+        
+        // 비밀번호 확인
+        function password_check() {
+            const pwd1 = document.getElementById("password1");
+            const pwd2 = document.getElementById("password2");
+
+            if (pwd1.value !== pwd2.value) {
+                alert("비밀번호가 틀렸습니다. 다시 입력해주세요.");
+                $("#password2").focus();
+                return flase;
+            }
+        }
+
+        // 유효성 검사 코드입니다. (모성민 5-11)
+        function from_check() {
+            let fileVal = $("#FileName").val();
+            var fileForm = /(.*?)\.(jpg|jpeg|png|gif|bmp|pdf)$/;
+
+            if ($("#RestuarantName").val() == "") {
+                alert("식당이름을 입력해주세요");
+                $("#RestuarantName").focus();
+                return false;
+            } else if ($("#addrName").val() == "") {
+                alert("식당주소을 입력해주세요");
+                $("#addrName").focus();
+                return false;
+            } else if ($("#star").val() == "-- 선택하기 --") {
+                alert("별점을 선택해주세요.");
+                $("#star").focus();
+                return false;
+            } else if ($("#comment").val() == "") {
+                alert("리뷰를 입력해주세요");
+                $("#comment").focus();
+                return false;
+            } else if ($("#FileName").val() == "") {
+                alert("파일을 선택해주세요");
+                $("#FileName").focus();
+                return false;
+            } else if (fileVal != "") {
+                var ext = fileVal.split('.').pop().toLowerCase(); //확장자분리
+                //아래 확장자가 있는지 체크
+                if ($.inArray(ext, ['jpg', 'jpeg', 'gif', 'png']) == -1) {
+                    alert("jpg,gif,jpeg,png' 파일만 업로드 할수 있습니다.")
+                    $("#FileName").focus();
+                    return false;
+                }
+            } else {
+                return true;
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <!-- 메인페이지 입니다. (모성민 5-11) -->
+    <div class="mypic">
+        <div class="yaMAKJa">
+            <!-- 배너 제목입니다. -->
+            <h1 class="display-5">야먹자</h1>
+        </div>
+        <!-- 식당등록 버튼입니다. -->
+        <div class="join col-sm-12 text-sm-end">
+            <button type="button" class="btn float-right btn-primary" data-bs-toggle="modal"
+                data-bs-target="#staticBackdrop">
+                식당등록
+            </button>
+            <!-- 식당등록 팝업페이지 -->
+            <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+                aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <!-- 팝업 제목입니다. -->
+                            <h1 class="modal-title fs-5" id="staticBackdropLabel" style="color: black;">
+                                글쓰기(식당 등록)
+                            </h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body" style="color: black">
+                            <div class="mypost">
+                                <div class="container text-center">
+                                    <div class="row">
+                                        <!-- ID입력창 -->
+                                        <div class="col">
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="nickname"
+                                                    placeholder="url" />
+                                                <label for="floatingInput" id="Nicknm">닉네임</label>
+                                            </div>
+                                        </div>
+                                        <!-- 패스워드 입력창 -->
+                                        <div class="col">
+                                            <div class="form-floating mb-3">
+                                                <input type="password" class="form-control" id="password"
+                                                    placeholder="url" />
+                                                <label for="floatingInput" id="passwd">패스워드</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- 식당이름입력 input -->
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="RestuarantName" placeholder="url" />
+                                    <label for="floatingInput" id="placeName">식당이름</label>
+                                </div>
+
+                                <!-- 식당주소입력 input -->
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="addrName" placeholder="url" />
+                                    <label for="floatingInput" id="addRess">주소</label>
+                                </div>
+
+                                <!-- 별점 선택 -->
+                                <div class="input-group mb-3">
+                                    <label class="input-group-text" for="inputGroupSelect01">별점</label>
+                                    <select class="form-select" id="star">
+                                        <option selected>-- 선택하기 --</option>
+                                        <option value="1">⭐</option>
+                                        <option value="2">⭐⭐</option>
+                                        <option value="3">⭐⭐⭐</option>
+                                        <option value="4">⭐⭐⭐⭐</option>
+                                        <option value="5">⭐⭐⭐⭐⭐</option>
+                                    </select>
+                                </div>
+                                <!-- 리뷰 입력 -->
+                                <div class="form-floating">
+                                    <textarea class="form-control" placeholder="Leave a comment here" id="comment"
+                                        style="height: 200px"></textarea>
+                                    <label for="floatingTextarea2" id="textual">리 뷰</label>
+                                </div>
+                                <br>
+                                <!-- 사진등록 input -->
+
+                                <div class="input-group mb-3">
+                                    <input type="file" accept="image/*" class="form-control" id="FileName" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 취소버튼 -->
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                                onclick="window.location.reload();">
+                                취소
+                            </button>
+                            <!-- 등록버튼 -->
+                            <div id="access">
+                                <button onclick="return from_check(),save_info()" type="button" id="btn_access"
+                                    class="btn btn-primary">
+                                    등록하기
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mycards">
+        <div class="row row-cols-1 row-cols-md-3 g-3" id="cards-box">
+            <div class="col">
+                <div class="card h-100">
+                    <img src="https://cdn.pixabay.com/photo/2018/10/14/18/29/meatloaf-3747129_1280.jpg"
+                        class="card-img-top">
+                    <div class="card-body">
+                        <h5 class="card-title">샌디위치</h5>
+                        <p class="card-text">샌드위치도</p>
+                        <p>⭐⭐⭐</p>
+                        <p class='nickName-text'> 맛집탐험가</p>
+                        <a class="btn btn-outline-primary">자세히 보기</a>
+                        <button id="btn-update" class="btn btn-warning" data-bs-toggle="modal"
+                            data-bs-target="#staticBackdrop2">수정</button>
+                        <div class="modal fade" id="staticBackdrop2" data-bs-backdrop="static" data-bs-keyboard="false"
+                            tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="staticBackdropLabel">수정 화면</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mypost">
+                                            <div class="container text-center">
+                                                <div class="row">
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="text" class="form-control" id="nickname"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="Nicknm">닉네임</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="password" class="form-control" id="password1"
+                                                                placeholder="url" readonly/>
+                                                            <label for="floatingInput" id="passwd">패스워드</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="password" class="form-control" id="password2"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="passwd" style="font-size: 13px;">패스워드 확인창</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- 식당이름입력 input -->
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="RestuarantName"
+                                                    placeholder="url" />
+                                                <label for="floatingInput" id="placeName">식당이름</label>
+                                            </div>
+
+                                            <!-- 식당주소입력 input -->
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="addrName"
+                                                    placeholder="url" />
+                                                <label for="floatingInput" id="addRess">주소</label>
+                                            </div>
+
+                                            <!-- 별점 선택 -->
+                                            <div class="input-group mb-3">
+                                                <label class="input-group-text" for="inputGroupSelect01">별점</label>
+                                                <select class="form-select" id="star">
+                                                    <option selected>-- 선택하기 --</option>
+                                                    <option value="1">⭐</option>
+                                                    <option value="2">⭐⭐</option>
+                                                    <option value="3">⭐⭐⭐</option>
+                                                    <option value="4">⭐⭐⭐⭐</option>
+                                                    <option value="5">⭐⭐⭐⭐⭐</option>
+                                                </select>
+                                            </div>
+                                            <!-- 리뷰 입력 -->
+                                            <div class="form-floating">
+                                                <textarea class="form-control" placeholder="Leave a comment here"
+                                                    id="comment" style="height: 200px"></textarea>
+                                                <label for="floatingTextarea2" id="textual">리 뷰</label>
+                                            </div>
+                                            <br>
+                                            <!-- 사진등록 input -->
+                                            <!-- <div class="input-group mb-3">
+                                                <input type="file" accept="image/*" class="form-control" id="FileName"
+                                                    required>
+                                            </div> -->
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">취소</button>
+                                        <button type="button" class="btn btn-warning" onclick="password_check()">수정하기</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="btn-delete" class="btn btn-danger">삭제</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card h-100">
+                    <img src="https://cdn.pixabay.com/photo/2016/03/23/15/00/ice-cream-1274894_640.jpg"
+                        class="card-img-top">
+                    <div class="card-body">
+                        <h5 class="card-title">아이스크림</h5>
+                        <p class="card-text">크림도</p>
+                        <p>⭐⭐⭐</p>
+                        <p class='nickName-text'> 아이스크림킬러</p>
+                        <a class="btn btn-outline-primary">자세히 보기</a>
+                        <button id="btn-update" class="btn btn-warning" data-bs-toggle="modal"
+                            data-bs-target="#staticBackdrop2">수정</button>
+                        <div class="modal fade" id="staticBackdrop2" data-bs-backdrop="static" data-bs-keyboard="false"
+                            tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="staticBackdropLabel">수정 화면</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mypost">
+                                            <div class="container text-center">
+                                                <div class="row">
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="text" class="form-control" id="nickname"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="Nicknm">닉네임</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="password" class="form-control" id="password1"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="passwd">패스워드</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="password" class="form-control" id="password2"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="passwd" style="font-size: 13px;">패스워드 확인창</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- 식당이름입력 input -->
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="RestuarantName"
+                                                    placeholder="url" />
+                                                <label for="floatingInput" id="placeName">식당이름</label>
+                                            </div>
+
+                                            <!-- 식당주소입력 input -->
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="addrName"
+                                                    placeholder="url" />
+                                                <label for="floatingInput" id="addRess">주소</label>
+                                            </div>
+
+                                            <!-- 별점 선택 -->
+                                            <div class="input-group mb-3">
+                                                <label class="input-group-text" for="inputGroupSelect01">별점</label>
+                                                <select class="form-select" id="star">
+                                                    <option selected>-- 선택하기 --</option>
+                                                    <option value="1">⭐</option>
+                                                    <option value="2">⭐⭐</option>
+                                                    <option value="3">⭐⭐⭐</option>
+                                                    <option value="4">⭐⭐⭐⭐</option>
+                                                    <option value="5">⭐⭐⭐⭐⭐</option>
+                                                </select>
+                                            </div>
+                                            <!-- 리뷰 입력 -->
+                                            <div class="form-floating">
+                                                <textarea class="form-control" placeholder="Leave a comment here"
+                                                    id="comment" style="height: 200px"></textarea>
+                                                <label for="floatingTextarea2" id="textual">본 문</label>
+                                            </div>
+                                            <br>
+                                            <!-- 사진등록 input -->
+                                            <div class="input-group mb-3">
+                                                <input type="file" accept="image/*" class="form-control" id="FileName"
+                                                    required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">취소</button>
+                                        <button type="button" class="btn btn-warning" onclick="password_check()">수정하기</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="btn-delete" class="btn btn-danger">삭제</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card h-100">
+                    <img src="https://cdn.pixabay.com/photo/2017/09/16/19/21/salad-2756467_640.jpg"
+                        class="card-img-top">
+                    <div class="card-body">
+                        <h5 class="card-title">샐러드집</h5>
+                        <p class="card-text">과일남도</p>
+                        <p>⭐⭐⭐</p>
+                        <p class='nickName-text'> 코끼리</p>
+                        <a class="btn btn-outline-primary">자세히 보기</a>
+                        <button id="btn-update" class="btn btn-warning" data-bs-toggle="modal"
+                            data-bs-target="#staticBackdrop2">수정</button>
+                        <div class="modal fade" id="staticBackdrop2" data-bs-backdrop="static" data-bs-keyboard="false"
+                            tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="staticBackdropLabel">수정 화면</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mypost">
+                                            <div class="container text-center">
+                                                <div class="row">
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="text" class="form-control" id="nickname"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="Nicknm">닉네임</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="password" class="form-control" id="password1"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="passwd">패스워드</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="password" class="form-control" id="password2"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="passwd" style="font-size: 13px;">패스워드 확인창</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- 식당이름입력 input -->
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="RestuarantName"
+                                                    placeholder="url" />
+                                                <label for="floatingInput" id="placeName">식당이름</label>
+                                            </div>
+
+                                            <!-- 식당주소입력 input -->
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="addrName"
+                                                    placeholder="url" />
+                                                <label for="floatingInput" id="addRess">주소</label>
+                                            </div>
+
+                                            <!-- 별점 선택 -->
+                                            <div class="input-group mb-3">
+                                                <label class="input-group-text" for="inputGroupSelect01">별점</label>
+                                                <select class="form-select" id="star">
+                                                    <option selected>-- 선택하기 --</option>
+                                                    <option value="1">⭐</option>
+                                                    <option value="2">⭐⭐</option>
+                                                    <option value="3">⭐⭐⭐</option>
+                                                    <option value="4">⭐⭐⭐⭐</option>
+                                                    <option value="5">⭐⭐⭐⭐⭐</option>
+                                                </select>
+                                            </div>
+                                            <!-- 리뷰 입력 -->
+                                            <div class="form-floating">
+                                                <textarea class="form-control" placeholder="Leave a comment here"
+                                                    id="comment" style="height: 200px"></textarea>
+                                                <label for="floatingTextarea2" id="textual">본 문</label>
+                                            </div>
+                                            <br>
+                                            <!-- 사진등록 input -->
+                                            <div class="input-group mb-3">
+                                                <input type="file" accept="image/*" class="form-control" id="FileName"
+                                                    required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">취소</button>
+                                        <button type="button" class="btn btn-warning" onclick="password_check()">수정하기</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="btn-delete" class="btn btn-danger">삭제</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card h-100">
+                    <img src="https://cdn.pixabay.com/photo/2017/07/28/14/29/macarons-2548827_640.jpg"
+                        class="card-img-top">
+                    <div class="card-body">
+                        <h5 class="card-title">디저트만</h5>
+                        <p class="card-text">마카롱</p>
+                        <p>⭐⭐⭐</p>
+                        <p class='nickName-text'> 당뇨환자</p>
+                        <a class="btn btn-outline-primary">자세히 보기</a>
+                        <button id="btn-update" class="btn btn-warning" data-bs-toggle="modal"
+                            data-bs-target="#staticBackdrop2">수정</button>
+                        <div class="modal fade" id="staticBackdrop2" data-bs-backdrop="static" data-bs-keyboard="false"
+                            tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="staticBackdropLabel">수정 화면</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mypost">
+                                            <div class="container text-center">
+                                                <div class="row">
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="text" class="form-control" id="nickname"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="Nicknm">닉네임</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="password" class="form-control" id="password1"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="passwd">패스워드</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="password" class="form-control" id="password2"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="passwd" style="font-size: 13px;">패스워드 확인창</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- 식당이름입력 input -->
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="RestuarantName"
+                                                    placeholder="url" />
+                                                <label for="floatingInput" id="placeName">식당이름</label>
+                                            </div>
+
+                                            <!-- 식당주소입력 input -->
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="addrName"
+                                                    placeholder="url" />
+                                                <label for="floatingInput" id="addRess">주소</label>
+                                            </div>
+
+                                            <!-- 별점 선택 -->
+                                            <div class="input-group mb-3">
+                                                <label class="input-group-text" for="inputGroupSelect01">별점</label>
+                                                <select class="form-select" id="star">
+                                                    <option selected>-- 선택하기 --</option>
+                                                    <option value="1">⭐</option>
+                                                    <option value="2">⭐⭐</option>
+                                                    <option value="3">⭐⭐⭐</option>
+                                                    <option value="4">⭐⭐⭐⭐</option>
+                                                    <option value="5">⭐⭐⭐⭐⭐</option>
+                                                </select>
+                                            </div>
+                                            <!-- 리뷰 입력 -->
+                                            <div class="form-floating">
+                                                <textarea class="form-control" placeholder="Leave a comment here"
+                                                    id="comment" style="height: 200px"></textarea>
+                                                <label for="floatingTextarea2" id="textual">본 문</label>
+                                            </div>
+                                            <br>
+                                            <!-- 사진등록 input -->
+                                            <div class="input-group mb-3">
+                                                <input type="file" accept="image/*" class="form-control" id="FileName"
+                                                    required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">취소</button>
+                                        <button type="button" class="btn btn-warning" onclick="password_check">수정하기</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="btn-delete" class="btn btn-danger">삭제</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card h-100">
+                    <img src="https://cdn.pixabay.com/photo/2017/03/23/19/57/asparagus-2169305_640.jpg"
+                        class="card-img-top">
+                    <div class="card-body">
+                        <h5 class="card-title">스테이크집</h5>
+                        <p class="card-text">고기광역시</p>
+                        <p>⭐⭐⭐</p>
+                        <p class='nickName-text'> 스님</p>
+                        <a class="btn btn-outline-primary">자세히 보기</a>
+                        <button id="btn-update" class="btn btn-warning" data-bs-toggle="modal"
+                            data-bs-target="#staticBackdrop2">수정</button>
+                        <div class="modal fade" id="staticBackdrop2" data-bs-backdrop="static" data-bs-keyboard="false"
+                            tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="staticBackdropLabel">수정 화면</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mypost">
+                                            <div class="container text-center">
+                                                <div class="row">
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="text" class="form-control" id="nickname"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="Nicknm">닉네임</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="password" class="form-control" id="password1"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="passwd">패스워드</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="password" class="form-control" id="password2"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="passwd" style="font-size: 13px;">패스워드 확인창</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- 식당이름입력 input -->
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="RestuarantName"
+                                                    placeholder="url" />
+                                                <label for="floatingInput" id="placeName">식당이름</label>
+                                            </div>
+
+                                            <!-- 식당주소입력 input -->
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="addrName"
+                                                    placeholder="url" />
+                                                <label for="floatingInput" id="addRess">주소</label>
+                                            </div>
+
+                                            <!-- 별점 선택 -->
+                                            <div class="input-group mb-3">
+                                                <label class="input-group-text" for="inputGroupSelect01">별점</label>
+                                                <select class="form-select" id="star">
+                                                    <option selected>-- 선택하기 --</option>
+                                                    <option value="1">⭐</option>
+                                                    <option value="2">⭐⭐</option>
+                                                    <option value="3">⭐⭐⭐</option>
+                                                    <option value="4">⭐⭐⭐⭐</option>
+                                                    <option value="5">⭐⭐⭐⭐⭐</option>
+                                                </select>
+                                            </div>
+                                            <!-- 리뷰 입력 -->
+                                            <div class="form-floating">
+                                                <textarea class="form-control" placeholder="Leave a comment here"
+                                                    id="comment" style="height: 200px"></textarea>
+                                                <label for="floatingTextarea2" id="textual">본 문</label>
+                                            </div>
+                                            <br>
+                                            <!-- 사진등록 input -->
+                                            <div class="input-group mb-3">
+                                                <input type="file" accept="image/*" class="form-control" id="FileName"
+                                                    required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">취소</button>
+                                        <button type="button" class="btn btn-warning" onclick="password_check()">수정하기</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="btn-delete" class="btn btn-danger">삭제</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card h-100">
+                    <img src="https://cdn.pixabay.com/photo/2016/03/30/21/59/coffee-beans-1291656_640.jpg"
+                        class="card-img-top">
+                    <div class="card-body">
+                        <h5 class="card-title">이베벅스</h5>
+                        <p class="card-text">미국</p>
+                        <p>⭐⭐⭐</p>
+                        <p class='nickName-text'> 황제</p>
+                        <a class="btn btn-outline-primary">자세히 보기</a>
+                        <button id="btn-update" class="btn btn-warning" data-bs-toggle="modal"
+                            data-bs-target="#staticBackdrop2">수정</button>
+                        <div class="modal fade" id="staticBackdrop2" data-bs-backdrop="static" data-bs-keyboard="false"
+                            tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="staticBackdropLabel">수정 화면</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mypost">
+                                            <div class="container text-center">
+                                                <div class="row">
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="text" class="form-control" id="nickname"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="Nicknm">닉네임</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="password" class="form-control" id="password1"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="passwd">패스워드</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="password" class="form-control" id="password2"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="passwd" style="font-size: 13px;">패스워드 확인창</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- 식당이름입력 input -->
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="RestuarantName"
+                                                    placeholder="url" />
+                                                <label for="floatingInput" id="placeName">식당이름</label>
+                                            </div>
+
+                                            <!-- 식당주소입력 input -->
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="addrName"
+                                                    placeholder="url" />
+                                                <label for="floatingInput" id="addRess">주소</label>
+                                            </div>
+
+                                            <!-- 별점 선택 -->
+                                            <div class="input-group mb-3">
+                                                <label class="input-group-text" for="inputGroupSelect01">별점</label>
+                                                <select class="form-select" id="star">
+                                                    <option selected>-- 선택하기 --</option>
+                                                    <option value="1">⭐</option>
+                                                    <option value="2">⭐⭐</option>
+                                                    <option value="3">⭐⭐⭐</option>
+                                                    <option value="4">⭐⭐⭐⭐</option>
+                                                    <option value="5">⭐⭐⭐⭐⭐</option>
+                                                </select>
+                                            </div>
+                                            <!-- 리뷰 입력 -->
+                                            <div class="form-floating">
+                                                <textarea class="form-control" placeholder="Leave a comment here"
+                                                    id="comment" style="height: 200px"></textarea>
+                                                <label for="floatingTextarea2" id="textual">본 문</label>
+                                            </div>
+                                            <br>
+                                            <!-- 사진등록 input -->
+                                            <div class="input-group mb-3">
+                                                <input type="file" accept="image/*" class="form-control" id="FileName"
+                                                    required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">취소</button>
+                                        <button type="button" class="btn btn-warning" onclick="password_check()">수정하기</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="btn-delete" class="btn btn-danger">삭제</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card h-100">
+                    <img src="https://cdn.pixabay.com/photo/2017/12/10/14/47/pizza-3010062_640.jpg"
+                        class="card-img-top">
+                    <div class="card-body">
+                        <h5 class="card-title">이태리피자피자</h5>
+                        <p class="card-text">이탈리아</p>
+                        <p>⭐⭐⭐</p>
+                        <p class='nickName-text'> 미슐랭따라쟁이</p>
+                        <a class="btn btn-outline-primary">자세히 보기</a>
+                        <button id="btn-update" class="btn btn-warning" data-bs-toggle="modal"
+                            data-bs-target="#staticBackdrop2">수정</button>
+                        <div class="modal fade" id="staticBackdrop2" data-bs-backdrop="static" data-bs-keyboard="false"
+                            tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="staticBackdropLabel">수정 화면</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mypost">
+                                            <div class="container text-center">
+                                                <div class="row">
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="text" class="form-control" id="nickname"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="Nicknm">닉네임</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="password" class="form-control" id="password1"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="passwd">패스워드</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="password" class="form-control" id="password2"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="passwd" style="font-size: 13px;">패스워드 확인창</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- 식당이름입력 input -->
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="RestuarantName"
+                                                    placeholder="url" />
+                                                <label for="floatingInput" id="placeName">식당이름</label>
+                                            </div>
+
+                                            <!-- 식당주소입력 input -->
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="addrName"
+                                                    placeholder="url" />
+                                                <label for="floatingInput" id="addRess">주소</label>
+                                            </div>
+
+                                            <!-- 별점 선택 -->
+                                            <div class="input-group mb-3">
+                                                <label class="input-group-text" for="inputGroupSelect01">별점</label>
+                                                <select class="form-select" id="star">
+                                                    <option selected>-- 선택하기 --</option>
+                                                    <option value="1">⭐</option>
+                                                    <option value="2">⭐⭐</option>
+                                                    <option value="3">⭐⭐⭐</option>
+                                                    <option value="4">⭐⭐⭐⭐</option>
+                                                    <option value="5">⭐⭐⭐⭐⭐</option>
+                                                </select>
+                                            </div>
+                                            <!-- 리뷰 입력 -->
+                                            <div class="form-floating">
+                                                <textarea class="form-control" placeholder="Leave a comment here"
+                                                    id="comment" style="height: 200px"></textarea>
+                                                <label for="floatingTextarea2" id="textual">본 문</label>
+                                            </div>
+                                            <br>
+                                            <!-- 사진등록 input -->
+                                            <div class="input-group mb-3">
+                                                <input type="file" accept="image/*" class="form-control" id="FileName"
+                                                    required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">취소</button>
+                                        <button type="button" class="btn btn-warning" onclick="password_check()">수정하기</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="btn-delete" class="btn btn-danger">삭제</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card h-100">
+                    <img src="https://cdn.pixabay.com/photo/2016/03/05/19/02/hamburger-1238246_640.jpg"
+                        class="card-img-top">
+                    <div class="card-body">
+                        <h5 class="card-title">롯데날드</h5>
+                        <p class="card-text">한국</p>
+                        <p>⭐⭐⭐</p>
+                        <p class='nickName-text'> 맥도날드</p>
+                        <a class="btn btn-outline-primary">자세히 보기</a>
+                        <button id="btn-update" class="btn btn-warning" data-bs-toggle="modal"
+                            data-bs-target="#staticBackdrop2">수정</button>
+                        <div class="modal fade" id="staticBackdrop2" data-bs-backdrop="static" data-bs-keyboard="false"
+                            tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="staticBackdropLabel">수정 화면</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mypost">
+                                            <div class="container text-center">
+                                                <div class="row">
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="text" class="form-control" id="nickname"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="Nicknm">닉네임</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="password" class="form-control" id="password1"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="passwd">패스워드</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- 식당이름입력 input -->
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="RestuarantName"
+                                                    placeholder="url" />
+                                                <label for="floatingInput" id="placeName">식당이름</label>
+                                            </div>
+
+                                            <!-- 식당주소입력 input -->
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="addrName"
+                                                    placeholder="url" />
+                                                <label for="floatingInput" id="addRess">주소</label>
+                                            </div>
+
+                                            <!-- 별점 선택 -->
+                                            <div class="input-group mb-3">
+                                                <label class="input-group-text" for="inputGroupSelect01">별점</label>
+                                                <select class="form-select" id="star">
+                                                    <option selected>-- 선택하기 --</option>
+                                                    <option value="1">⭐</option>
+                                                    <option value="2">⭐⭐</option>
+                                                    <option value="3">⭐⭐⭐</option>
+                                                    <option value="4">⭐⭐⭐⭐</option>
+                                                    <option value="5">⭐⭐⭐⭐⭐</option>
+                                                </select>
+                                            </div>
+                                            <!-- 리뷰 입력 -->
+                                            <div class="form-floating">
+                                                <textarea class="form-control" placeholder="Leave a comment here"
+                                                    id="comment" style="height: 200px"></textarea>
+                                                <label for="floatingTextarea2" id="textual">본 문</label>
+                                            </div>
+                                            <br>
+                                            <!-- 사진등록 input -->
+                                            <div class="input-group mb-3">
+                                                <input type="file" accept="image/*" class="form-control" id="FileName"
+                                                    required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">취소</button>
+                                        <button type="button" class="btn btn-warning" onclick="password_check()">수정하기</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="btn-delete" class="btn btn-danger">삭제</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card h-100">
+                    <img src="https://cdn.pixabay.com/photo/2013/04/07/21/30/bread-101636_640.jpg"
+                        class="card-img-top">
+                    <div class="card-body">
+                        <h5 class="card-title">한국바게트</h5>
+                        <p class="card-text">강원도</p>
+                        <p>⭐⭐⭐</p>
+                        <p class='nickName-text'> 악플러</p>
+                        <a class="btn btn-outline-primary">자세히 보기</a>
+                        <button id="btn-update" class="btn btn-warning" data-bs-toggle="modal"
+                            data-bs-target="#staticBackdrop2">수정</button>
+                        <div class="modal fade" id="staticBackdrop2" data-bs-backdrop="static" data-bs-keyboard="false"
+                            tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="staticBackdropLabel">수정 화면</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mypost">
+                                            <div class="container text-center">
+                                                <div class="row">
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="text" class="form-control" id="nickname"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="Nicknm">닉네임</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="password" class="form-control" id="password1"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="passwd">패스워드</label>
+                                                        </div>
+                                                        <div class="col">
+                                                            <div class="form-floating mb-3">
+                                                                <input type="password" class="form-control" id="password2"
+                                                                    placeholder="url" />
+                                                                <label for="floatingInput" id="passwd" style="font-size: 13px;">패스워드 확인창</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- 식당이름입력 input -->
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="RestuarantName"
+                                                    placeholder="url" />
+                                                <label for="floatingInput" id="placeName">식당이름</label>
+                                            </div>
+
+                                            <!-- 식당주소입력 input -->
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="addrName"
+                                                    placeholder="url" />
+                                                <label for="floatingInput" id="addRess">주소</label>
+                                            </div>
+
+                                            <!-- 별점 선택 -->
+                                            <div class="input-group mb-3">
+                                                <label class="input-group-text" for="inputGroupSelect01">별점</label>
+                                                <select class="form-select" id="star">
+                                                    <option selected>-- 선택하기 --</option>
+                                                    <option value="1">⭐</option>
+                                                    <option value="2">⭐⭐</option>
+                                                    <option value="3">⭐⭐⭐</option>
+                                                    <option value="4">⭐⭐⭐⭐</option>
+                                                    <option value="5">⭐⭐⭐⭐⭐</option>
+                                                </select>
+                                            </div>
+                                            <!-- 리뷰 입력 -->
+                                            <div class="form-floating">
+                                                <textarea class="form-control" placeholder="Leave a comment here"
+                                                    id="comment" style="height: 200px"></textarea>
+                                                <label for="floatingTextarea2" id="textual">본 문</label>
+                                            </div>
+                                            <br>
+                                            <!-- 사진등록 input -->
+                                            <div class="input-group mb-3">
+                                                <input type="file" accept="image/*" class="form-control" id="FileName"
+                                                    required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">취소</button>
+                                        <button type="button" class="btn btn-warning" onclick="password_check()">수정하기</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="btn-delete" class="btn btn-danger">삭제</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card h-100">
+                    <img src="https://cdn.pixabay.com/photo/2015/12/09/17/12/popcorn-1085072_640.jpg"
+                        class="card-img-top">
+                    <div class="card-body">
+                        <h5 class="card-title">cgv</h5>
+                        <p class="card-text">어디에나</p>
+                        <p>⭐⭐⭐</p>
+                        <p class='nickName-text'> 리뷰어</p>
+                        <a class="btn btn-outline-primary">자세히 보기</a>
+                        <button id="btn-update" class="btn btn-warning" data-bs-toggle="modal"
+                            data-bs-target="#staticBackdrop2">수정</button>
+                        <div class="modal fade" id="staticBackdrop2" data-bs-backdrop="static" data-bs-keyboard="false"
+                            tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="staticBackdropLabel">수정 화면</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mypost">
+                                            <div class="container text-center">
+                                                <div class="row">
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="text" class="form-control" id="nickname"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="Nicknm">닉네임</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="password" class="form-control" id="password1"
+                                                                placeholder="url" />
+                                                            <label for="floatingInput" id="passwd">패스워드</label>
+                                                        </div>
+                                                        <div class="col">
+                                                            <div class="form-floating mb-3">
+                                                                <input type="password" class="form-control" id="password2"
+                                                                    placeholder="url" />
+                                                                <label for="floatingInput" id="passwd" style="font-size: 13px;">패스워드 확인창</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- 식당이름입력 input -->
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="RestuarantName"
+                                                    placeholder="url" />
+                                                <label for="floatingInput" id="placeName">식당이름</label>
+                                            </div>
+
+                                            <!-- 식당주소입력 input -->
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="addrName"
+                                                    placeholder="url" />
+                                                <label for="floatingInput" id="addRess">주소</label>
+                                            </div>
+
+                                            <!-- 별점 선택 -->
+                                            <div class="input-group mb-3">
+                                                <label class="input-group-text" for="inputGroupSelect01">별점</label>
+                                                <select class="form-select" id="star">
+                                                    <option selected>-- 선택하기 --</option>
+                                                    <option value="1">⭐</option>
+                                                    <option value="2">⭐⭐</option>
+                                                    <option value="3">⭐⭐⭐</option>
+                                                    <option value="4">⭐⭐⭐⭐</option>
+                                                    <option value="5">⭐⭐⭐⭐⭐</option>
+                                                </select>
+                                            </div>
+                                            <!-- 리뷰 입력 -->
+                                            <div class="form-floating">
+                                                <textarea class="form-control" placeholder="Leave a comment here"
+                                                    id="comment" style="height: 200px"></textarea>
+                                                <label for="floatingTextarea2" id="textual">본 문</label>
+                                            </div>
+                                            <br>
+                                            <!-- 사진등록 input -->
+                                            <div class="input-group mb-3">
+                                                <input type="file" accept="image/*" class="form-control" id="FileName"
+                                                    required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">취소</button>
+                                        <button type="button" class="btn btn-warning" onclick="password_check()">수정하기</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="btn-delete" class="btn btn-danger">삭제</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+</body>
+
+</html>
